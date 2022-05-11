@@ -1,0 +1,168 @@
+import socket,os,time,sys
+from whois import whois
+import builtwith
+from concurrent.futures import ThreadPoolExecutor,as_completed
+
+
+
+
+
+print('--------------------------------------------------------------------')
+print('--------------------------欢迎使用--------------------------------')
+print('--------------------------------------------------------------------')
+
+#域名反查IP
+def IP (url):
+    ip=socket.gethostbyname(url)
+    print("域名对应的ip是：",ip)
+    print('--------------------------------------------------------------------')
+
+def CDN (url):
+#识别目标DNS解析
+
+    #当前函数不能把结果存放到变量中 ：cdn_data=os.system('nslookup www.baidu.com')
+#能输出结果并存放到对象中（可以被调用）
+    cdn_data=os.popen('nslookup '+url)
+    cdn=cdn_data.read()          #读取所获取的结果
+    print("DNS解析的信息为：")
+    print(cdn)
+
+    print('--------------------------------------------------------------------')
+#识别目标是否存在CDN
+#采用nslookup返回的数目去判断是否有CDN
+    x=cdn.count('.')
+    if x>10:                #利用返回的.的数量来判断
+        print("存在CDN!")
+    else:
+        print("不存在CDN!")
+
+    print('--------------------------------------------------------------------')
+
+
+#端口扫描
+#1、原生自写socket协议TCP，UDP扫描
+def PORT (url):
+    ip = socket.gethostbyname(url)
+    port_data = {'21', '22', '23', '80', '161', '389', '443', '445', '873', '1025', '1433', '1521', '2082', '2222',
+                 '3128', '3306', '3128', '3306', '3312', '3311', '3389', '4440', '5432', '5900'}
+
+    def LS(port):
+        TCP_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        TCP_sock.settimeout(5)
+        try:
+            result = TCP_sock.connect_ex((ip, int(port)))
+            if result == 0:
+                print(port)
+
+            else:
+                pass
+                # print(port,"端口关闭！")
+                TCP_sock.close()
+        except socket.error as e:
+            print(port, "端口关闭！")
+            pass
+
+    with ThreadPoolExecutor() as pool:  # 设置一个多线程池
+        results = pool.map(LS, port_data)  # 选中运行函数+参数表
+        for result in results:  # 输出运行结果
+            if result == None:
+                pass
+            else:
+                print(result)
+    print('--------------------------------------------------------------------')
+
+#2、调用第三方模块
+#3、调用系统工具
+
+
+#whois查询：从第三方库进行查询
+def WHOIS(url):
+    data=whois(url)
+    print(data)
+    print('--------------------------------------------------------------------')
+
+#网站开发技术
+def KF(url):
+    urls = "http://"+url
+    kf =builtwith.parse(urls)
+    print(kf)
+    print('--------------------------------------------------------------------')
+
+#子域名查询
+#1、使用字典本地查询
+def ZYM (url):
+    urls = url.replace('www', '')  # 把前面的www直接置换为空
+    for zym_data in open('dic.txt'):
+        zym_data=zym_data.replace('\n','')           #把换行替换为空
+        url=zym_data+urls
+        try:                #当线程过大时会报，需要你设置为尝试请求
+            zym = socket.gethostbyname(url)
+            print(url+'->'+zym)         #让每个域名对应一个IP地址
+        except Exception as e:      #如果发生错误就直接跳出
+            pass
+
+    print('--------------------------------------------------------------------')
+
+
+#2、使用网上接口查询
+
+
+
+
+#nmap扫描内网主机
+
+
+
+#--------------------------------------------------------------------------------------------------------------
+#用户模块
+#--------------------------------------------------------------------------------------------------------------
+
+
+'''
+sys.argv[0]:相当于第一个PY文件
+sys.argv[1]：相当于第二个参数
+
+'''
+
+if __name__ == '__main__':
+
+    chack=sys.argv[1]
+    url=sys.argv[2]
+    if chack=='-h':
+        print("--------------------------欢迎使用wscan！---------------------------")
+        print('--------------------------------------------------------------------')
+        print("-IP    查询域名对应的IP信息")
+        print("-CDN   查询是否挂载CDN")
+        print("-PORT  查询常用端口是否开放")
+        print("-ZYM   查询子域名(请输入主域名，如果前面是www，请忽略)")
+        print("-WHOIS whois查询")
+        print("-KF    查询网站中间件")
+        print("-all   使用全部功能")
+        print('--------------------------------------------------------------------')
+    if chack == '-IP':
+        IP(url)
+    if chack == '-CDN':
+        CDN(url)
+    if chack == '-PORT':
+        PORT(url)
+    if chack == '-ZYM':
+        ZYM(url)
+    if chack == '-KF':
+        KF(url)
+    if chack=='-WHOIS':
+        WHOIS(url)
+    if chack=='-all':
+        IP(url)
+        CDN(url)
+        PORT(url)
+        KF(url)
+        WHOIS(url)
+        ZYM(url)
+
+
+
+    '''
+    IP()
+    CDN()
+    PORT()
+    '''
